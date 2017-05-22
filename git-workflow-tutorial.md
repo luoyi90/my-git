@@ -547,7 +547,7 @@ git push
 
 ![](images/git-workflow-release-cycle-3release.png)
 
-一旦`develop`分支上有了做一次发布（或者说快到了既定的发布日）的足够功能，就从`develop`分支上`fork`一个发布分支。
+一旦`develop`分支上有了做一次发布（或者说快到了既定的发布日）的足够功能，就从`develop`分支上`checkout`一个发布分支。
 新建的分支用于开始发布循环，所以从这个时间点开始之后新的功能不能再加到这个分支上——
 这个分支只应该做`Bug`修复、文档生成和其它面向发布任务。
 一旦对外发布的工作都完成了，发布分支合并到`master`分支并分配一个版本号打好`Tag`。
@@ -1135,3 +1135,22 @@ git push origin some-branch
 5. 若此次上线后，不久发现生产环境有 Bug 需要修复，则从 Tag 处新开分支 release_bugfix_20150731、dev_bugfix_20150731 ，开发人员从 dev_bugfix_20150731分支上进行开发，提测code review在 release_bugfix_20150731 分支上，具体步骤参考2-3，测试环境验证通过后，发布到线上，验证OK，合并到 Master 分支，并打 Tag0.2.3，此次 Bug 修复完毕，专为解 Bug 而生的这两个分支可以退伍了，删除release_bugfix_20150731、dev_bugfix_20150731两分支即可。（所有的历史 Commit 信息均已经提交到了 Master 分支上，不用担心丢失）
 
 这样经过上面的1-5步骤，企业日常迭代开发中的代码版本控制基本上就 Ok 了，有问题欢迎 Issue 讨论。
+
+2016-11月 更新 **Git 分支开发部署模型** 的一些使用原则如下:
+
+![](./_image/2016-09-22-20-57-27.jpg)
+
+- master：master永远是线上代码，最稳定的分支，存放的是随时可供在生产环境中部署的代码，当开发活动告一段落，产生了一份新的可供部署的代码时，发布成功之后，代码才会由 aone2 提交到 master，master 分支上的代码会被更新。应用上 aone2 后禁掉所有人的 master的写权限
+- develop：保存当前最新开发成果的分支。通常这个分支上的代码也是可进行每日夜间发布的代码，只对开发负责人开放develop权限。
+- feature: 功能特性分支，每个功能特性一个 feature/ 分支，开发完成自测通过后合并入 develop 分支。可以从 master 或者develop 中拉出来。
+- hotfix: 紧急bug分支修复分支。修复上线后，可以直接合并入master。
+
+![](./_image/2016-07-19 19-58-15.jpg)
+
+Git-Develop 分支模式是基于 Git 代码库设计的一种需要严格控制发布质量和发布节奏的开发模式。develop 作为固定的持续集成和发布分支，并且分支上的代码必须经过 CodeReview 后才可以提交到 Develop 分支。它的基本流程如下：
+- 每一个需求/变更都单独从Master上创建一条Branch分支；
+- 用户在这个Branch分支上进行Codeing活动；
+- 代码达到发布准入条件后aone上提交Codereview，Codereview通过后代码自动合并到Develop分支；
+- 待所有计划发布的变更分支代码都合并到Develop后，系统再 rebase master 代码到Develop 分支，然后自行构建，打包，部署等动作。
+- 应用发布成功后Aone会基于Develop分支的发布版本打一个“当前线上版本Tag”基线；
+- 应用发布成功后Aone会自动把Develop分支的发布版本合并回master；
